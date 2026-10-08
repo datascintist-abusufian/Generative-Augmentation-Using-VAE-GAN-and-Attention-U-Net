@@ -8,18 +8,13 @@ The pipeline doesn't hard-code any results. Every table, statistical test, timin
 
 ## Pipeline overview
 
-```mermaid
-flowchart LR
-    A[ACDC ED/ES NIfTI] --> B[Preprocess<br/>clip 1–99th pct, resize, cache]
-    B --> C[Patient-level 5-fold CV<br/>stratified by diagnosis]
-    C --> D[Paired geometric transform<br/>image + mask]
-    D --> E[Mask-conditioned VAE<br/>latent perturbation]
-    E --> F[Conditional U-Net refiner<br/>+ PatchGAN discriminator]
-    F --> G{QC gate<br/>SSIM · anatomy Dice · set-level FID}
-    G --> H[Real + synthetic training set]
-    H --> I[Residual Attention U-Net<br/>BG · LV · Myo · RV]
-    I --> J[Dice · IoU · HD95 · ASSD<br/>paired stats · figures · claim audit]
-```
+<p align="center">
+  <img src="docs/figures/pipeline_overview.png" alt="Pipeline overview: (a) mask-conditioned hybrid VAE-GAN synthesis with a quality-control gate; (b) residual Attention U-Net segmentation" width="100%">
+</p>
+
+**Figure 1.** **(a)** A real slice and its mask receive the same geometric transform. The mask-conditioned VAE perturbs appearance in latent space, the conditional U-Net refiner (trained with a PatchGAN discriminator) sharpens the coarse image, and a QC gate (SSIM, anatomy Dice, set-level FID) admits the synthetic pair. **(b)** Real and QC-passed synthetic pairs train a residual Attention U-Net, which is evaluated on held-out test patients. Vector version: [`docs/figures/pipeline_overview.pdf`](docs/figures/pipeline_overview.pdf).
+
+> **Note:** this is a layout preview rendered from the synthetic test fixture, not ACDC, and is watermarked as such. It will be replaced by the same figure regenerated from a real ACDC run with `scripts/make_pipeline_figure.py`.
 
 ### How synthetic pairs stay anatomically aligned
 
